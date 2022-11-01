@@ -1,10 +1,11 @@
 from XMLAnnotParser import parse_single_annotation_file
 import os
+from tqdm import tqdm
 
 
 def merge_dicts(dict1, dict2):
     """
-    merge two dicts
+    merge two dicts by adding values of same keys
     :param dict1:
     :param dict2:
     :return:
@@ -51,6 +52,20 @@ def count_sequences(annotations_top_dir):
             count += 1
     return count
 
+def count_error_files(annotations_top_dir):
+    """
+    count how many sequences in the dataset, (only count .xml files under annotations_top_dir)
+    :param annotations_top_dir: the top-level dir of annotations
+    :return:
+    """
+    count = 0
+    for annotations_path in os.listdir(annotations_top_dir):
+        annotations_path = os.path.join(annotations_top_dir, annotations_path)
+        for annotation_filename in os.listdir(annotations_path):
+            if not annotation_filename.endswith(".error"):
+                continue
+            count += 1
+    return count
 
 def count_tracks_per_sequence(xml_dict):
     """
@@ -86,7 +101,7 @@ def count_category_occurrences_frame_level_per_sequence(xml_dict):
     """
     frames_per_track = count_frames_per_track(xml_dict)
     category_count_dict = {}
-    for track in xml_dict['tracks_list']:
+    for track in xml_dict['tracks_list']:  # for each track
         category = track['label']
         if category not in category_count_dict:
             category_count_dict[category] = frames_per_track[track['id']]
@@ -120,22 +135,19 @@ def count_frames_per_sequence(xml_dict):
     return sum(frames_count_dict.values())
 
 
-def count_attribute_occurrence_per_sequence(xml_dict):
-    """
-    count how many times each attribute appears in a single dataset sequence, (frame level)
-    :param xml_dict:
-    :return:
-    """
-    attribute_count_dict = {}
-    for track in xml_dict['tracks_list']:
-        for box in track['box_list']:
-            for attributes in box['attributes_list']:
-                attribute = attributes['id']
-                if attribute not in attribute_count_dict:
-                    attribute_count_dict[attribute] = 1
-                else:
-                    attribute_count_dict[attribute] += 1
-    return attribute_count_dict
+# def count_attribute_occurrence_per_sequence(xml_dict):
+#     """
+#     count how many times each attribute appears in a single dataset sequence, (frame level)
+#     :param xml_dict:
+#     :return:
+#     """
+#     attribute_count_dict = {}
+#     for track in xml_dict['tracks_list']:
+#         for box in track['box_list']:
+#             attributes_dict = box['attributes_dict']
+#             # merge two dicts
+#             attribute_count_dict = merge_dicts(attribute_count_dict, attributes_dict)
+#     return attribute_count_dict
 
 
 def count_attribute_occurrence_frame_level_per_sequence(xml_dict):
@@ -144,17 +156,59 @@ def count_attribute_occurrence_frame_level_per_sequence(xml_dict):
     :param xml_dict:
     :return: attribute_count_dict: {attribute_id: count}
     """
-    frames_per_track = count_frames_per_track(xml_dict)
-    attribute_count_dict = {}
+    # dicts to store the count of each attribute
+    outsides_dict = {}  # {outside_or_not: count}
+    occlusions_dict = {}  # {occlusion_val: count}
+    altitudes_dict = {}  # {altitude_val: count}
+    illuminations_dict = {}  # {illumination_val: count}
+    keep_outs_dict = {}  # {keep_out_val: count}
+    cam_movements_dict = {}  # {cam_movement_val: count}
+    scenes_dict = {}  # {scene_val: count}
+
     for track in xml_dict['tracks_list']:
-        for box in track['box_list']:
-            for attributes in box['attributes_list']:
-                attribute = attributes['id']
-                if attribute not in attribute_count_dict:
-                    attribute_count_dict[attribute] = frames_per_track[track['id']]
+        for box in track['box_list']:  # for each frame
+            if box['outside'] not in outsides_dict:
+                outsides_dict[box['outside']] = 1
+            else:
+                outsides_dict[box['outside']] += 1
+
+            if box['occluded'] not in occlusions_dict:
+                occlusions_dict[box['occluded']] = 1
+            else:
+                occlusions_dict[box['occluded']] += 1
+
+            # process extra attributes
+            attributes_dict = box['attributes_dict']
+            # print(attributes_dict)
+            # if not empty
+            if attributes_dict:
+                # merge two dicts
+                if attributes_dict['altitude'] not in altitudes_dict:
+                    altitudes_dict[attributes_dict['altitude']] = 1
                 else:
-                    attribute_count_dict[attribute] += frames_per_track[track['id']]
-    return attribute_count_dict
+                    altitudes_dict[attributes_dict['altitude']] += 1
+
+                if attributes_dict['illumination'] not in illuminations_dict:
+                    illuminations_dict[attributes_dict['illumination']] = 1
+                else:
+                    illuminations_dict[attributes_dict['illumination']] += 1
+
+                if attributes_dict['keep_out'] not in keep_outs_dict:
+                    keep_outs_dict[attributes_dict['keep_out']] = 1
+                else:
+                    keep_outs_dict[attributes_dict['keep_out']] += 1
+
+                if attributes_dict['cam_movement'] not in cam_movements_dict:
+                    cam_movements_dict[attributes_dict['cam_movement']] = 1
+                else:
+                    cam_movements_dict[attributes_dict['cam_movement']] += 1
+
+                if attributes_dict['scene'] not in scenes_dict:
+                    scenes_dict[attributes_dict['scene']] = 1
+                else:
+                    scenes_dict[attributes_dict['scene']] += 1
+
+    return outsides_dict, occlusions_dict, altitudes_dict, illuminations_dict, keep_outs_dict, cam_movements_dict, scenes_dict
 
 
 # def count_average_tracks_per_sequence(dataset_dict_list):
@@ -169,14 +223,24 @@ def annotations_dict_generator(annotations_top_dir):
     :param annotations_top_dir:
     :return:
     """
-    for annotations_path in os.listdir(annotations_top_dir):
+    top_level_iterator = tqdm(os.listdir(annotations_top_dir), leave=False)
+    top_level_iterator.set_description('top level iterator progress: ')
+    for annotations_path in top_level_iterator:
         annotations_path = os.path.join(annotations_top_dir, annotations_path)
-        for annotation_filename in os.listdir(annotations_path):
+        annotation_files_iterator = tqdm(os.listdir(annotations_path))
+        annotation_files_iterator.set_description('annotation files iterator progress: ')
+        for annotation_filename in annotation_files_iterator:
             if not annotation_filename.endswith(".xml"):
                 continue
             # parse annotation file
             xml_path = os.path.join(annotations_path, annotation_filename)
-            xml_dict = parse_single_annotation_file(xml_path)
+            try:
+                xml_dict = parse_single_annotation_file(xml_path)
+            except Exception as e:  # if parsing failed, skip this file, print error, rename the file end with .error
+                print(e)
+                # rename xml file to end with .xml.error
+                os.rename(xml_path, xml_path + '.error')
+                continue
             yield xml_dict
 
 
@@ -187,9 +251,8 @@ def analyze_dataset():
 def draw_pie_chart(data_dict, title):
     """
     draw a pie chart, using data from a dict: data_dict
-    :param data_dict:
-    :param title:
-    :param save_path:
+    :param data_dict: {key: value}
+    :param title: title of the chart
     :return:
     """
     # draw a pie chart

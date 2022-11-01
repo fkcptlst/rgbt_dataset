@@ -42,28 +42,13 @@ xml_dict = {
                     "ybr": 65,
                     "outside": 0,
                     "occluded": 0,
-                    "attributes_list": [
-                        {
-                            "id": 65,
-                            "value": "30m"
-                        },
-                        {
-                            "id": 67,
-                            "value": "bright_light"
-                        },
-                        {
-                            "id": 69,
-                            "value": "not_keep_out"
-                        },
-                        {
-                            "id": 71,
-                            "value": "not_shake"
-                        },
-                        {
-                            "id": 73,
-                            "value": "stadium"
-                        }
-                    ]  # attributes_list
+                    "attributes_dict": {
+                        "altitude": "30m",
+                        "illumination": "bright_light",
+                        "keep_out": "not_keep_out",
+                        "shake": "not_shake",
+                        "scene": "stadium"
+                    }  # attributes_list
                 }  # box_dict
             ]  # box_list
         },  # track_dict
@@ -73,6 +58,7 @@ xml_dict = {
 ```
 
 ## 统计数据集
+
 ### scalar
 
 #### sequence level
@@ -82,10 +68,12 @@ xml_dict = {
 -[x] average tracks per sequence
 
 #### category level
+
 -[ ] number of categories
 -[ ] distribution of categories
 
 #### scene level
+
 -[ ] number of scenes
 -[ ] distribution of scenes
 
