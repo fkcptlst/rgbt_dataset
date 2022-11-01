@@ -1,37 +1,15 @@
 import xml.etree.ElementTree as ET
 import os
 import cv2 as cv
+from XMLAnnotParser import parse_single_annotation_file
 
+config = {
+    'step_mode': False,  # if True, step mode, if False, stream mode
+    'show_occluded': True,  # if True, show occluded boxes, if False, hide occluded boxes
+    'show_outside': False,  # if True, show outside boxes, if False, hide outside boxes
+    'display_attributes': True,  # if True, display attributes, if False, hide attributes
+}
 
-def parse_single_annotation_file(xml_path):
-    tree = ET.parse(xml_path)
-    # convert xml to dict
-    root = tree.getroot()
-    xml_dict = {}
-    xml_dict['annotations_count'] = root.attrib['count']
-    xml_dict['tracks_list'] = []
-    for track in root:  # get all tracks
-        # copy track.attrib to track_dict to avoid changing track.attrib, result is like {'id': '0', 'label': 'person'}
-        track_dict = {}
-        for key, value in track.attrib.items():
-            track_dict[key] = value
-        # print(box.attrib)
-        track_dict['box_list'] = []
-        for box in track:  # get all boxes
-            box_dict = {}
-            for key, value in box.attrib.items():
-                box_dict[key] = value
-            box_dict['attributes_list'] = []  # a list to store child attributes
-            for attributes in box:
-                attributes_dict = {}
-                for key, value in attributes.attrib.items():
-                    attributes_dict[key] = value
-                attributes_dict['value'] = attributes.text
-                box_dict['attributes_list'].append(attributes_dict)
-            track_dict['box_list'].append(box_dict)
-        xml_dict['tracks_list'].append(track_dict)
-
-    return xml_dict
 
 
 if __name__ == '__main__':
@@ -68,25 +46,54 @@ if __name__ == '__main__':
                 if frame is None:
                     break
                 print(f'frame_idx:{frame_idx}')
-                for track in xml_dict['tracks_list']: # get all tracks
+                for track in xml_dict['tracks_list']:  # get all tracks
                     box_list = track['box_list']
                     box = box_list[frame_idx]
                     assert box['frame'] == str(frame_idx)
-                    if box['outside'] == '1':  # skip outside box
+                    if box['outside'] == '1' and not config['show_outside']:  # skip outside box if not show_occluded
+                        continue
+                    if box['occluded'] == '1' and not config['show_occluded']:  # skip occluded box if not show_occluded
                         continue
                     xtl, ytl, xbr, ybr = int(box['xtl']), int(box['ytl']), int(box['xbr']), int(box['ybr'])
-                    cv.rectangle(frame, (xtl, ytl), (xbr, ybr), (0, 0, 255), 1)
+                    cv.rectangle(frame, (xtl, ytl), (xbr, ybr), (0, 255, 255), 1)
+
+                    font_size = 0.5
+
+                    if config['display_attributes']:
+                        # display occulded info and outside info
+                        cv.putText(frame, f'occluded:{box["occluded"]}', (xtl, ytl), cv.FONT_HERSHEY_SIMPLEX,
+                                   font_size, (0, 0, 255), 1)
+                        cv.putText(frame, f'outside:{box["outside"]}', (xtl, ytl - 15), cv.FONT_HERSHEY_SIMPLEX,
+                                   font_size, (0, 0, 255), 1)
+                        # display attributes
+                        attributes_dict = box['attributes_dict']
+                        if attributes_dict:
+                            for cnt, (key, value) in enumerate(attributes_dict.items()):
+                                cv.putText(frame, f'{key}:{value}', (xtl, ytl - 15 * (cnt + 2)), cv.FONT_HERSHEY_SIMPLEX,
+                                           font_size,
+                                           (0, 0, 255), 1)
+                        else:
+                            cv.putText(frame, '{}', (xtl, ytl - 15), cv.FONT_HERSHEY_SIMPLEX, font_size, (0, 0, 255), 1)
 
                     # for box in track['box_list']:
                     #     if int(box['frame']) == frame_idx:
                     #         # print(box['xtl'], box['ytl'], box['xbr'], box['ybr'])
                     #         cv.rectangle(frame, (int(box['xtl']), int(box['ytl'])), (int(box['xbr']), int(box['ybr'])), (0, 0, 255), 2)
-                cv.imshow('frame', frame)
-                cv.waitKey(1)
+                cv.imshow(f'vid:{vid_path},   annot:{xml_path}', frame)
+                if config['step_mode']:
+                    key = cv.waitKey(0) & 0xFF
+                else:
+                    key = cv.waitKey(1) & 0xFF
+
+                # detect key press with non-blocking, if press 'c', continue, if press 's', step mode, if press 'q', quit
+                if key == ord('c'):
+                    config['step_mode'] = False
+                elif key == ord('p'):
+                    config['step_mode'] = True
+                elif key == ord('v'):
+                    config['display_attributes'] = not config['display_attributes']  # verbose
+                elif key == ord('q'):
+                    break
                 frame_idx += 1
-
-
-
-
-
-
+            video.release()
+            cv.destroyAllWindows()

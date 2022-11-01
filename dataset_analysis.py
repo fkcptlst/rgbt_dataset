@@ -194,6 +194,12 @@ def count_attribute_occurrence_frame_level_per_sequence(xml_dict):
                     illuminations_dict[attributes_dict['illumination']] += 1
 
                 if attributes_dict['keep_out'] not in keep_outs_dict:
+                    if attributes_dict['keep_out'] == 'shake':  #TODO debug
+                        # print track id
+                        print(f"track id:{track['id']}")
+                        # print box id
+                        print(f"frame: {box['frame']}")
+                        raise Exception('shake')
                     keep_outs_dict[attributes_dict['keep_out']] = 1
                 else:
                     keep_outs_dict[attributes_dict['keep_out']] += 1
@@ -241,7 +247,7 @@ def annotations_dict_generator(annotations_top_dir):
                 # rename xml file to end with .xml.error
                 os.rename(xml_path, xml_path + '.error')
                 continue
-            yield xml_dict
+            yield xml_dict, xml_path
 
 
 def analyze_dataset():
