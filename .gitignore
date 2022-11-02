@@ -1,4 +1,7 @@
 .idea
 annotation
 video
+old
 new_annotation
+new_video
+DATASET_ROOT

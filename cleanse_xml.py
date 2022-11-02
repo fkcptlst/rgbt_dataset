@@ -27,9 +27,10 @@ def annotation_path_generator(annotations_top_dir):
 
 
 if __name__ == '__main__':
-    annotations_top_dir = './annotation'
-    new_annotations_top_dir = './new_annotation'
-    for i,xml_path in enumerate(annotation_path_generator(annotations_top_dir)):
+    error_annotation_path_list = []
+    annotations_top_dir = 'annotation'
+    new_annotations_top_dir = 'DATASET_ROOT/annotations'
+    for i, xml_path in enumerate(annotation_path_generator(annotations_top_dir)):
         # sequence level attributes
         scene_count_dict = {"street": 0, "stadium": 0}
         altitude_count_dict = {"30m": 0, "60m": 0, "90m": 0, "120m": 0}
@@ -69,6 +70,24 @@ if __name__ == '__main__':
         scene = max(scene_count_dict, key=scene_count_dict.get)
         altitude = max(altitude_count_dict, key=altitude_count_dict.get)
         illumination = max(illumination_count_dict, key=illumination_count_dict.get)
+
+        try:
+            # assert that the most frequent scene, altitude and illumination outnumber the others by 80%
+            assert scene_count_dict[scene] > 0.8 * sum(scene_count_dict.values()), \
+                "xml:{}, scene_count_dict: {}".format(xml_path, scene_count_dict)
+            assert altitude_count_dict[altitude] > 0.8 * sum(altitude_count_dict.values()), \
+                "xml:{}, altitude_count_dict: {}".format(xml_path, altitude_count_dict)
+            assert illumination_count_dict[illumination] > 0.8 * sum(illumination_count_dict.values()), \
+                "xml:{}, illumination_count_dict: {}".format(xml_path, illumination_count_dict)
+        except AssertionError as e:
+            print("\033[1;31m error \033[0m")
+            traceback.print_exc()
+            # # maually fix the error
+            # if xml_path.find("h30_20+\DJI_0004.xml") != -1:  # DJI_0004.xml, stadium
+            #     scene = "stadium"
+            error_annotation_path_list.append(xml_path)
+            pass  # ignore the error
+
         print("xml:{}, scene: {}, altitude: {}, illumination: {}".format(xml_path, scene, altitude, illumination))
         with open(xml_path, 'r') as f:
             line = f.readline()
@@ -80,3 +99,5 @@ if __name__ == '__main__':
         # create a new xml file with the same name
         with open(new_path, 'w') as f:
             f.writelines(new_lines)
+    print("done.")
+    print(f"error_annotation_path_list:{error_annotation_path_list}")
