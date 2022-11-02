@@ -17,7 +17,6 @@ def error_annotation_path_generator(annotations_top_dir):
         for annotation_filename in annotation_files_iterator:
             if not annotation_filename.endswith(".xml.error"):
                 continue
-            # parse annotation file
             xml_path = os.path.join(annotations_path, annotation_filename)
             yield xml_path
 
