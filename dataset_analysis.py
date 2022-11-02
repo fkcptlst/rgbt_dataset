@@ -1,3 +1,5 @@
+import traceback
+
 from XMLAnnotParser import parse_single_annotation_file
 import os
 from tqdm import tqdm
@@ -193,6 +195,7 @@ def count_attribute_occurrence_frame_level_per_sequence(xml_dict):
                 else:
                     illuminations_dict[attributes_dict['illumination']] += 1
 
+                # DEBUG only begin--------------------------------------------------------------
                 if attributes_dict['keep_out'] not in keep_outs_dict:
                     if attributes_dict['keep_out'] == 'shake':  #TODO debug
                         # print track id
@@ -200,6 +203,7 @@ def count_attribute_occurrence_frame_level_per_sequence(xml_dict):
                         # print box id
                         print(f"frame: {box['frame']}")
                         raise Exception('shake')
+                # DEBUG only end-----------------------------------------------------------------
                     keep_outs_dict[attributes_dict['keep_out']] = 1
                 else:
                     keep_outs_dict[attributes_dict['keep_out']] += 1
@@ -243,7 +247,9 @@ def annotations_dict_generator(annotations_top_dir):
             try:
                 xml_dict = parse_single_annotation_file(xml_path)
             except Exception as e:  # if parsing failed, skip this file, print error, rename the file end with .error
-                print(e)
+                print("\033[1;31merror\033[0m")  # print bold "error" in red
+                # print traceback
+                traceback.print_exc()
                 # rename xml file to end with .xml.error
                 os.rename(xml_path, xml_path + '.error')
                 continue
