@@ -6,3 +6,5 @@ new_annotation
 new_video
 DATASET_ROOT
 DATASET_ROOT-O
+rgb_sample
+thermal_sample

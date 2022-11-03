@@ -73,7 +73,7 @@ xml_dict = {
 
 ```python
 xml_dict = {
-    "annotations_count": 19,
+    "count": 19,
     "altitude": "120m",
     "scene": "street",
     "illumination": "bright_light",
@@ -236,4 +236,6 @@ VOC_ROOT     #根目录
   - ...
 
 ![img.png](img.png)
+![img_1.png](img_1.png)
 
+- 有些红外和可见光不匹配，记录在mismatch.txt中
