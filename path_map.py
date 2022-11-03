@@ -9,7 +9,7 @@ from tqdm import tqdm
 def annotation_path_generator(annotations_top_dir):
     """
     generator used for yielding error annotation that end with 'xml.error', that is, the annotation file to be fixed
-    :param annotations_top_dir:
+    :param annotations_top_dir: OLD annotation path
     :return:
     """
     top_level_iterator = tqdm(os.listdir(annotations_top_dir), leave=False)

@@ -19,37 +19,6 @@ def merge_dicts(dict1, dict2):
             dict1[key] += dict2[key]
     return dict1
 
-def annotations_dict_generator(dataset_root_dir):
-    """
-    generator used for yielding xml dicts
-    :param dataset_root_dir:
-    :return:
-    """
-    annotation_dir = os.path.join(dataset_root_dir, "annotations")
-    top_level_iterator = tqdm(os.listdir(annotation_dir), leave=False)
-    top_level_iterator.set_description('progress: ')
-    for annotation_filename in top_level_iterator:
-        # annotations_path = os.path.join(dataset_root_dir, annotations_path)
-        # annotation_files_iterator = tqdm(os.listdir(annotations_path))
-        # annotation_files_iterator.set_description('annotation files iterator progress: ')
-        # annotation_files_iterator = os.listdir(annotations_path)
-        # for annotation_filename in annotation_files_iterator:
-        if not annotation_filename.endswith(".xml"):
-            continue
-        # parse annotation file
-        xml_path = os.path.join(annotation_dir, annotation_filename)
-        try:
-            xml_dict = parse_single_annotation_file(xml_path)
-        except Exception as e:  # if parsing failed, skip this file, print error, rename the file end with .error
-            print("\033[1;31merror\033[0m")  # print bold "error" in red
-            # print traceback
-            traceback.print_exc()
-            # rename xml file to end with .xml.error
-            os.rename(xml_path, xml_path + '.error')
-            continue
-        yield xml_dict, xml_path
-
-
 # def get_all_dicts(annotations_top_dir):
 #     """
 #     get all dicts from all annotation files, notice that this process is time-consuming
@@ -77,6 +46,7 @@ def count_sequences(dataset_root_dir):
     """
     return len(os.listdir(os.path.join(dataset_root_dir, "annotations")))
 
+
 def count_error_files(dataset_root_dir):
     """
     count how many sequences in the dataset, (only count .error files under annotations_top_dir)
@@ -88,6 +58,7 @@ def count_error_files(dataset_root_dir):
         if filename.endswith(".error"):
             _count += 1
     return _count
+
 
 def count_tracks_per_sequence(xml_dict):
     """
@@ -154,7 +125,10 @@ def count_frames_per_sequence(xml_dict):
     :return: scalar: how many frames in the sequence
     """
     frames_count_dict = count_frames_per_track(xml_dict)
-    return sum(frames_count_dict.values())
+    # check if all tracks have the same frame count
+    frame_count_list = list(frames_count_dict.values())
+    assert len(set(frame_count_list)) == 1  # if all tracks have the same frame count, the set of frame count should have length 1
+    return frame_count_list[0]
 
 
 # def count_attribute_occurrence_per_sequence(xml_dict):
@@ -288,30 +262,31 @@ def count_attribute_occurrence_frame_level_per_sequence(xml_dict):
             #     else:
             #         illuminations_dict[attributes_dict['illumination']] += 1
 
-                # # DEBUG only begin--------------------------------------------------------------
-                # if attributes_dict['keep_out'] not in keep_outs_dict:
-                #     if attributes_dict['keep_out'] == 'shake':
-                #         # print track id
-                #         print(f"track id:{track['id']}")
-                #         # print box id
-                #         print(f"frame: {box['frame']}")
-                #         raise Exception('shake')
-                # # DEBUG only end-----------------------------------------------------------------
-                #     keep_outs_dict[attributes_dict['keep_out']] = 1
-                # else:
-                #     keep_outs_dict[attributes_dict['keep_out']] += 1
+            # # DEBUG only begin--------------------------------------------------------------
+            # if attributes_dict['keep_out'] not in keep_outs_dict:
+            #     if attributes_dict['keep_out'] == 'shake':
+            #         # print track id
+            #         print(f"track id:{track['id']}")
+            #         # print box id
+            #         print(f"frame: {box['frame']}")
+            #         raise Exception('shake')
+            # # DEBUG only end-----------------------------------------------------------------
+            #     keep_outs_dict[attributes_dict['keep_out']] = 1
+            # else:
+            #     keep_outs_dict[attributes_dict['keep_out']] += 1
 
-                # if attributes_dict['cam_movement'] not in cam_movements_dict:
-                #     cam_movements_dict[attributes_dict['cam_movement']] = 1
-                # else:
-                #     cam_movements_dict[attributes_dict['cam_movement']] += 1
-                #
-                # if attributes_dict['scene'] not in scenes_dict:
-                #     scenes_dict[attributes_dict['scene']] = 1
-                # else:
-                #     scenes_dict[attributes_dict['scene']] += 1
+            # if attributes_dict['cam_movement'] not in cam_movements_dict:
+            #     cam_movements_dict[attributes_dict['cam_movement']] = 1
+            # else:
+            #     cam_movements_dict[attributes_dict['cam_movement']] += 1
+            #
+            # if attributes_dict['scene'] not in scenes_dict:
+            #     scenes_dict[attributes_dict['scene']] = 1
+            # else:
+            #     scenes_dict[attributes_dict['scene']] += 1
 
     return outsides_dict, occlusions_dict, altitudes_dict, illuminations_dict, scenes_dict
+
 
 # def count_average_tracks_per_sequence(dataset_dict_list):
 #     total_tracks = 0
@@ -344,6 +319,27 @@ def draw_pie_chart(data_dict, title):
     ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
     plt.title(title)
     # plt.savefig(save_path)
+    plt.show()
+    plt.close()
+
+
+def draw_bar_chart(data_dict, title):
+    """
+    draw a bar chart, using data from a dict: data_dict
+    """
+    import matplotlib.pyplot as plt
+    labels = []
+    sizes = []
+    for key in data_dict:
+        labels.append(key)
+        sizes.append(data_dict[key])
+
+    fig, ax = plt.subplots(figsize=(10, len(data_dict) / 5))
+    ax.barh(labels, sizes)
+    ax.set_title(title)
+
+    for i, v in enumerate(sizes):
+        ax.text(v + 3, i-0.25, str(v), fontweight='bold')
     plt.show()
     plt.close()
 
