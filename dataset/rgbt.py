@@ -47,7 +47,7 @@ class RGBT(VisionDataset):
         super(RGBT, self).__init__(root=root, transform=transform)
         self.root = root
         self.image_set = image_set
-        assert self.image_set in ["train", "val", "test", "all"],\
+        assert self.image_set in ["train", "val", "test", "all"], \
             f"image_set must be one of 'train', 'val', 'test', 'all', but got {self.image_set}"
         # self.transforms = transforms
         self.transform = transform
@@ -148,7 +148,7 @@ if __name__ == '__main__':
     """
     dataset = RGBT(root='D:\\Project_repository\\RGBT_multi_dataset\\DATASET_ROOT', image_set='all')
     print(f'len: {len(dataset)}')
-    step = 6
+    step = 5
     i = 0
     while i < len(dataset):
         rgb_img, thermal_img, annot_dict = dataset[i]
@@ -158,15 +158,15 @@ if __name__ == '__main__':
         assert rgb_img.shape == thermal_img.shape
         # print(f'annot_dict: {annot_dict}')
 
-        overlapped = cv.addWeighted(rgb_img, 0.6, thermal_img, 0.7, 0)
+        overlapped = cv.addWeighted(rgb_img, 0.8, thermal_img, 0.4, 0)
         seq_id, altitude, scene, illumination, frame_pos = \
-            annot_dict['sequence_id'], annot_dict['altitude'], annot_dict['scene'],\
+            annot_dict['sequence_id'], annot_dict['altitude'], annot_dict['scene'], \
             annot_dict['illumination'], annot_dict['frame_pos']
         cv.putText(overlapped, f'altitude:{altitude}', (0, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
         cv.putText(overlapped, f'scene:{scene}', (0, 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
         cv.putText(overlapped, f'illumination:{illumination}', (0, 45), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
         cv.putText(overlapped, f'frame_pos:{frame_pos}', (0, 60), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
-        cv.putText(overlapped, f'seq_id:{i}', (0, 75), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+        cv.putText(overlapped, f'seq_id:{seq_id}', (0, 75), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
         for track in annot_dict['track_list']:
             box = track['box']
             if box['outside'] == '0':  # skip outside box
@@ -178,12 +178,13 @@ if __name__ == '__main__':
                 cv.rectangle(overlapped, (xtl, ytl), (xbr, ybr), (0, 255, 255), 1)
         # display
         cv.imshow("overlapping", overlapped)
-        key = cv.waitKey(1) & 0xFF
+        key = cv.waitKey(0) & 0xFF
         if key == ord('f'):
             step += 5
             print(f'step: {step}')
         elif key == ord('s'):
             step = max(1, step - 5)
             print(f'step: {step}')
-
+        elif key == ord('p'):
+            i = max(0, i - step * 2)
         i += step

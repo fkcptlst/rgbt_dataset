@@ -239,3 +239,10 @@ VOC_ROOT     #根目录
 ![img_1.png](img_1.png)
 
 - 有些红外和可见光不匹配，记录在mismatch.txt中
+
+## Misalignment
+- 0
+- 33 small target
+- 46
+- 48
+- 61
