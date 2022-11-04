@@ -25,6 +25,16 @@ check list:
 """
 
 if __name__ == '__main__':
+    # register keybord interrupt, write log to file
+    def keyboard_interrupt_handler(signal, frame):
+        print('KeyboardInterrupt (ID: {}) has been caught. Writing log...'.format(signal))
+        with open(os.path.join(dataset_root, "data_integrity_check.log"), 'w') as f:
+            for log in log_list:
+                f.write(log)
+        exit(0)
+    import signal
+    signal.signal(signal.SIGINT, keyboard_interrupt_handler)
+
     try:
         frames_count = np.genfromtxt(os.path.join(dataset_root, "frames_count.csv"), delimiter=",",
                                      dtype=np.int32, skip_header=1)
@@ -95,7 +105,9 @@ if __name__ == '__main__':
         log_list.append(f'{str(e)}\n')
     with open(os.path.join(dataset_root, "data_integrity_check.log"), 'w') as f:
         f.writelines(log_list)
-    if len(log_list) == 0:
-        print("data integrity check pass")
-    else:
-        print("data integrity check failed")
+        if len(log_list) == 0:
+            print("data integrity check pass")
+            f.write("\ndata integrity check pass")
+        else:
+            print("data integrity check failed")
+            f.write("\ndata integrity check failed")

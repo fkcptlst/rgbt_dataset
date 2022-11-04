@@ -85,7 +85,7 @@ def video_path_generator(annot_top_dir):
 
 
 checkpoint_idx = 77  # checkpoint is file that is not done
-only = True  # if True, only convert the checkpoint file
+only = False  # if True, only convert the checkpoint file
 no_error = True
 
 thermal_frames_count_list = []
@@ -93,6 +93,16 @@ rgb_frames_count_list = []
 log_list = [f'checkpoint_idx: {checkpoint_idx}']
 
 if __name__ == '__main__':
+    # register keybord interrupt, write log to file
+    def keyboard_interrupt_handler(signal, frame):
+        print('KeyboardInterrupt (ID: {}) has been caught. Writing log...'.format(signal))
+        with open('convert_vid_to_img.py.log', 'w') as f:
+            for log in log_list:
+                f.write(log)
+        exit(0)
+    import signal
+    signal.signal(signal.SIGINT, keyboard_interrupt_handler)
+
     image_top_dir = os.path.join('./DATASET_ROOT', 'sequences')
     for idx, thermal_vid_path, rgb_vid_path in video_path_generator('annotation'):
         if idx < checkpoint_idx:
