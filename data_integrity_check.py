@@ -16,12 +16,13 @@ log_list = []
 """
 check list:
 - seq num is 119
-- frames number count equal
+- frames number count equal to .csv file
 - all files exists
 - all seq frames > 0
-- shape is (512, 640, 3)
+- thermal shape is (512, 640, 3)
+- rgb shape is (1080, 1920, 3)
 - xml exists
-- frames equals images number
+- frames in xml equals to thermal img number
 """
 
 if __name__ == '__main__':
@@ -39,10 +40,10 @@ if __name__ == '__main__':
         frames_count = np.genfromtxt(os.path.join(dataset_root, "frames_count.csv"), delimiter=",",
                                      dtype=np.int32, skip_header=1)
         total_seq_num = frames_count.shape[0]
-        # assert rgb_frames_count equals thermal_frames_count
-        assert (frames_count[:, 1] == frames_count[:, 2]).all(), f'rgb_frames_count != thermal_frames_count, ' \
-                                                                 f'frames_count[:, 1]:{frames_count[:, 1]}, ' \
-                                                                 f'frames_count[:, 2]:{frames_count[:, 2]}'
+        # # assert rgb_frames_count equals thermal_frames_count
+        # assert (frames_count[:, 1] == frames_count[:, 2]).all(), f'rgb_frames_count != thermal_frames_count, ' \
+        #                                                          f'frames_count[:, 1]:{frames_count[:, 1]}, ' \
+        #                                                          f'frames_count[:, 2]:{frames_count[:, 2]}'
         # assert total_seq_num is 120
         assert total_seq_num == 120, f'total_seq_num is {total_seq_num}, not 120'
         for i in tqdm(range(total_seq_num)):
@@ -66,9 +67,9 @@ if __name__ == '__main__':
                                                                     f'thermal_dir:{thermal_dir}, ' \
                                                                     f'thermal_frames_count:{thermal_frames_count}, ' \
                                                                     f'thermal_files_count:{thermal_files_count}'
-                assert rgb_frames_count == thermal_frames_count, f'rgb_frames_count != thermal_frames_count, ' \
-                                                                 f'rgb_dir:{rgb_dir}, rgb_frames_count:{rgb_frames_count}, ' \
-                                                                 f'thermal_dir:{thermal_dir}, thermal_frames_count:{thermal_frames_count}'
+                # assert rgb_frames_count == thermal_frames_count, f'rgb_frames_count != thermal_frames_count, ' \
+                #                                                  f'rgb_dir:{rgb_dir}, rgb_frames_count:{rgb_frames_count}, ' \
+                #                                                  f'thermal_dir:{thermal_dir}, thermal_frames_count:{thermal_frames_count}'
                 assert rgb_frames_count > 0, f'rgb_frames_count <= 0, rgb_dir:{rgb_dir}, rgb_frames_count:{rgb_frames_count}'
                 assert thermal_frames_count > 0, f'thermal_frames_count <= 0, thermal_dir:{thermal_dir}, thermal_frames_count:{thermal_frames_count}'
             except Exception as e:
@@ -83,9 +84,7 @@ if __name__ == '__main__':
                     rgb_img = cv2.imread(rgb_filename)
                     thermal_img = cv2.imread(thermal_filename)
                     assert rgb_img.shape == \
-                           (
-                               512, 640,
-                               3), f'rgb_filename:{rgb_filename}: rgb_img.shape:{rgb_img.shape} not (512, 640, 3)'
+                           (1080, 1920, 3), f'rgb_filename:{rgb_filename}: rgb_img.shape:{rgb_img.shape} not (1080, 1920, 3)'
                     assert thermal_img.shape == \
                            (512, 640, 3), f'thermal_filename:{thermal_filename}: ' \
                                           f'thermal_img.shape:{thermal_img.shape} not (512, 640, 3)'
