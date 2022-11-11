@@ -200,7 +200,7 @@ VOC_ROOT     #根目录
           ├── train.txt    # txt文件中每一行包含一个图片的名称
           └── val.txt
 ```
-
+TCSVT
 ### Visual-Thermal
 
 - train_ST_002
@@ -240,9 +240,12 @@ VOC_ROOT     #根目录
 
 - 有些红外和可见光不匹配，记录在mismatch.txt中
 
-## Misalignment
+## Misalignment(Fixed, Backed up in ext drive)
 - 0
 - 33 small target
 - 46
 - 48
 - 61
+
+## Temporal Misalignment
+It seems that IR is 1 second ahead or behind RGB

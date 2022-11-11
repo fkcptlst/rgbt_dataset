@@ -26,7 +26,7 @@ def convert(vid_file_path, img_dir_path, term=None):
     :param vid_file_path:
     :param img_dir_path:
     :param step:
-    :param term: if not None: frame count must equal to term
+    :param term: if not None: frame count must equal to term, otherwise keep as it is
     :return:
     """
     vidcap = cv2.VideoCapture(vid_file_path)
@@ -84,7 +84,7 @@ def video_path_generator(annot_top_dir):
             yield idx, thermal_vid_path, rgb_vid_path
 
 
-checkpoint_idx = 77  # checkpoint is file that is not done
+checkpoint_idx = 0  # checkpoint is file that is not done
 only = False  # if True, only convert the checkpoint file
 no_error = True
 
@@ -118,7 +118,7 @@ if __name__ == '__main__':
             os.makedirs(rgb_img_dir, exist_ok=True)
 
             thermal_frames = convert(thermal_vid_path, thermal_img_dir)
-            rgb_frames = convert(rgb_vid_path, rgb_img_dir, term=thermal_frames)
+            rgb_frames = convert(rgb_vid_path, rgb_img_dir)  # , term=thermal_frames)
 
             assert thermal_frames == rgb_frames, f'\nidx: {idx}, thermal_vid_path: {thermal_vid_path}, rgb_vid_path: {rgb_vid_path},' \
                                                  f'thermal_frames:{thermal_frames},rgb_frames:{rgb_frames} unmatch'

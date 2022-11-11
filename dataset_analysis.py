@@ -19,6 +19,7 @@ def merge_dicts(dict1, dict2):
             dict1[key] += dict2[key]
     return dict1
 
+
 # def get_all_dicts(annotations_top_dir):
 #     """
 #     get all dicts from all annotation files, notice that this process is time-consuming
@@ -127,7 +128,8 @@ def count_frames_per_sequence(xml_dict):
     frames_count_dict = count_frames_per_track(xml_dict)
     # check if all tracks have the same frame count
     frame_count_list = list(frames_count_dict.values())
-    assert len(set(frame_count_list)) == 1  # if all tracks have the same frame count, the set of frame count should have length 1
+    assert len(
+        set(frame_count_list)) == 1  # if all tracks have the same frame count, the set of frame count should have length 1
     return frame_count_list[0]
 
 
@@ -339,7 +341,7 @@ def draw_bar_chart(data_dict, title):
     ax.set_title(title)
 
     for i, v in enumerate(sizes):
-        ax.text(v + 3, i-0.25, str(v), fontweight='bold')
+        ax.text(v + 3, i - 0.25, str(v), fontweight='bold')
     plt.show()
     plt.close()
 
