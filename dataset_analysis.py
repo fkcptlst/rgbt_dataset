@@ -12,12 +12,13 @@ def merge_dicts(dict1, dict2):
     :param dict2:
     :return:
     """
+    dict3 = {key: dict1[key] for key in dict1}
     for key in dict2:
-        if key not in dict1:
-            dict1[key] = dict2[key]
+        if key in dict3:
+            dict3[key] += dict2[key]
         else:
-            dict1[key] += dict2[key]
-    return dict1
+            dict3[key] = dict2[key]
+    return dict3
 
 
 # def get_all_dicts(annotations_top_dir):
@@ -317,7 +318,7 @@ def draw_pie_chart(data_dict, title):
         sizes.append(data_dict[key])
     fig1, ax1 = plt.subplots()
     ax1.pie(sizes, labels=labels, autopct='%1.1f%%',
-            shadow=False, startangle=90)
+            shadow=False, startangle=90, colors=['#ff9999', '#66b3ff', '#99ff99', '#ffcc99', '#ff99cc', '#cc99ff'])
     ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
     plt.title(title)
     # plt.savefig(save_path)
