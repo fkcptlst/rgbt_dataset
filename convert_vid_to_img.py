@@ -120,8 +120,14 @@ if __name__ == '__main__':
             thermal_frames = convert(thermal_vid_path, thermal_img_dir)
             rgb_frames = convert(rgb_vid_path, rgb_img_dir)  # , term=thermal_frames)
 
-            assert thermal_frames == rgb_frames, f'\nidx: {idx}, thermal_vid_path: {thermal_vid_path}, rgb_vid_path: {rgb_vid_path},' \
-                                                 f'thermal_frames:{thermal_frames},rgb_frames:{rgb_frames} unmatch'
+            # t_vidcap = cv2.VideoCapture(thermal_vid_path)
+            # thermal_frames = int(t_vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
+            #
+            # rgb_vidcap = cv2.VideoCapture(rgb_vid_path)
+            # rgb_frames = int(rgb_vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+            # assert thermal_frames == rgb_frames, f'\nidx: {idx}, thermal_vid_path: {thermal_vid_path}, rgb_vid_path: {rgb_vid_path},' \
+            #                                      f'thermal_frames:{thermal_frames},rgb_frames:{rgb_frames} unmatch'
 
             thermal_frames_count_list.append(thermal_frames)
             rgb_frames_count_list.append(rgb_frames)

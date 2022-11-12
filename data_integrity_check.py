@@ -4,14 +4,12 @@ import cv2
 from tqdm import tqdm
 import traceback
 
-dataset_root = 'DATASET_ROOT'
 
 
 def file_exists(filename):
     return os.path.isfile(filename)
 
 
-log_list = []
 
 """
 check list:
@@ -22,20 +20,21 @@ check list:
 - thermal shape is (512, 640, 3)
 - rgb shape is (1080, 1920, 3)
 - xml exists
-- frames in xml equals to thermal img number
 """
 
-if __name__ == '__main__':
+
+def integrity_check(dataset_root):
+    log_list = []
     # register keybord interrupt, write log to file
     def keyboard_interrupt_handler(signal, frame):
         print('KeyboardInterrupt (ID: {}) has been caught. Writing log...'.format(signal))
         with open(os.path.join(dataset_root, "data_integrity_check.log"), 'w') as f:
             for log in log_list:
                 f.write(log)
-        exit(0)
+        # exit(0)
+
     import signal
     signal.signal(signal.SIGINT, keyboard_interrupt_handler)
-
     try:
         frames_count = np.genfromtxt(os.path.join(dataset_root, "frames_count.csv"), delimiter=",",
                                      dtype=np.int32, skip_header=1)
@@ -50,8 +49,9 @@ if __name__ == '__main__':
             try:
                 rgb_dir = os.path.join(dataset_root, "sequences", "RGB", str(i))
                 thermal_dir = os.path.join(dataset_root, "sequences", "Thermal", str(i))
-                rgb_frames_count = frames_count[i, 1]
-                thermal_frames_count = frames_count[i, 2]
+
+                thermal_frames_count = frames_count[i, 1]
+                rgb_frames_count = frames_count[i, 2]
 
                 rgb_files_count = len(os.listdir(rgb_dir))
                 thermal_files_count = len(os.listdir(thermal_dir))
@@ -77,14 +77,33 @@ if __name__ == '__main__':
                 log_list.append(f'Error in seq {i}: {e}')
             for j in range(rgb_frames_count):
                 try:
-                    rgb_filename = os.path.join(rgb_dir, str(j) + ".jpg")
+                    rgb_filename = os.path.join(rgb_dir, f"{str(j)}.jpg")
                     assert file_exists(rgb_filename), f'rgb_filename:{rgb_filename} not exists'
-                    thermal_filename = os.path.join(thermal_dir, str(j) + ".jpg")
-                    assert file_exists(thermal_filename), f'thermal_filename:{thermal_filename} not exists'
+                    # thermal_filename = os.path.join(thermal_dir, str(j) + ".jpg")
+                    # assert file_exists(thermal_filename), f'thermal_filename:{thermal_filename} not exists'
                     rgb_img = cv2.imread(rgb_filename)
-                    thermal_img = cv2.imread(thermal_filename)
+                    # thermal_img = cv2.imread(thermal_filename)
                     assert rgb_img.shape == \
-                           (1080, 1920, 3), f'rgb_filename:{rgb_filename}: rgb_img.shape:{rgb_img.shape} not (1080, 1920, 3)'
+                           (1080, 1920,
+                            3), f'rgb_filename:{rgb_filename}: rgb_img.shape:{rgb_img.shape} not (1080, 1920, 3)'
+                                    # assert thermal_img.shape == \
+                                    #        (512, 640, 3), f'thermal_filename:{thermal_filename}: ' \
+                                    #                       f'thermal_img.shape:{thermal_img.shape} not (512, 640, 3)'
+                except Exception as e:
+                    print(e)
+                    traceback.print_exc()
+                    log_list.append(f'{str(e)}\n')
+            for j in range(thermal_frames_count):
+                try:
+                    # rgb_filename = os.path.join(rgb_dir, str(j) + ".jpg")
+                    # assert file_exists(rgb_filename), f'rgb_filename:{rgb_filename} not exists'
+                    thermal_filename = os.path.join(thermal_dir, f"{str(j)}.jpg")
+                    assert file_exists(thermal_filename), f'thermal_filename:{thermal_filename} not exists'
+                    # rgb_img = cv2.imread(rgb_filename)
+                    thermal_img = cv2.imread(thermal_filename)
+                    # assert rgb_img.shape == \
+                    #        (1080, 1920,
+                    #         3), f'rgb_filename:{rgb_filename}: rgb_img.shape:{rgb_img.shape} not (1080, 1920, 3)'
                     assert thermal_img.shape == \
                            (512, 640, 3), f'thermal_filename:{thermal_filename}: ' \
                                           f'thermal_img.shape:{thermal_img.shape} not (512, 640, 3)'
@@ -94,7 +113,7 @@ if __name__ == '__main__':
                     log_list.append(f'{str(e)}\n')
         for i in range(total_seq_num):
             try:
-                xml_path = os.path.join(dataset_root, "annotations", str(i) + ".xml")
+                xml_path = os.path.join(dataset_root, "annotations", f"{str(i)}.xml")
                 assert file_exists(xml_path), f'xml_path:{xml_path} not exists'
             except Exception as e:
                 print(e)
@@ -104,9 +123,14 @@ if __name__ == '__main__':
         log_list.append(f'{str(e)}\n')
     with open(os.path.join(dataset_root, "data_integrity_check.log"), 'w') as f:
         f.writelines(log_list)
-        if len(log_list) == 0:
-            print("data integrity check pass")
-            f.write("\ndata integrity check pass")
+        if not log_list:
+            print("data integrity check passed!")
+            f.write("\ndata integrity check passed!")
         else:
-            print("data integrity check failed")
-            f.write("\ndata integrity check failed")
+            print("data integrity check failed!!!")
+            f.write("\ndata integrity check failed!!!")
+
+
+if __name__ == '__main__':
+    dataset_root = 'DATASET_ROOT'
+    integrity_check(dataset_root)
