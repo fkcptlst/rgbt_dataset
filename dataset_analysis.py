@@ -88,21 +88,42 @@ def count_category_occurrences_per_sequence(xml_dict):
     return category_count_dict
 
 
-def count_category_occurrences_frame_level_per_sequence(xml_dict):
+def count_category_occurrences_frame_level_per_sequence(xml_dict, count_outside_frames=False):
     """
     count how many times each category appears in a single dataset sequence at frame level, (frame level)
     :param xml_dict:
     :return: category_count_dict: {category_name: count}
     """
-    frames_per_track = count_frames_per_track(xml_dict)
     category_count_dict = {}
-    for track in xml_dict['tracks_list']:  # for each track
-        category = track['label']
-        if category not in category_count_dict:
-            category_count_dict[category] = frames_per_track[track['id']]
-        else:
-            category_count_dict[category] += frames_per_track[track['id']]
+    if count_outside_frames:
+        frames_per_track = count_frames_per_track(xml_dict)
+        for track in xml_dict['tracks_list']:  # for each track
+            category = track['label']
+            if category not in category_count_dict:
+                category_count_dict[category] = frames_per_track[track['id']]
+            else:
+                category_count_dict[category] += frames_per_track[track['id']]
+    else:
+        for track in xml_dict['tracks_list']:
+            category = track['label']
+            if category not in category_count_dict:
+                category_count_dict[category] = count_non_outside_frames_per_track(track)
+            else:
+                category_count_dict[category] += count_non_outside_frames_per_track(track)
     return category_count_dict
+
+
+def count_non_outside_frames_per_track(track):
+    """
+    count how many frames in a single track are not outside frames
+    :param track:
+    :return:
+    """
+    count = 0
+    for box in track['box_list']:
+        if box['outside'] == '0':
+            count += 1
+    return count
 
 
 def count_frames_per_track(xml_dict):
@@ -287,6 +308,41 @@ def count_attribute_occurrence_frame_level_per_sequence(xml_dict):
             #     scenes_dict[attributes_dict['scene']] = 1
             # else:
             #     scenes_dict[attributes_dict['scene']] += 1
+
+    return outsides_dict, occlusions_dict, altitudes_dict, illuminations_dict, scenes_dict
+
+
+def count_attribute_occurrence_frame_level_per_sequence_non_outside(xml_dict):
+    """
+    count how many times each attribute appears in a single dataset sequence at frame level, (frame level)
+    :param xml_dict:
+    :return: attribute_count_dict: {attribute_id: count}
+    """
+    # dicts to store the count of each attribute
+    outsides_dict = {}  # {outside_or_not: count}
+    occlusions_dict = {}  # {occlusion_val: count}
+    altitudes_dict = {"30m": 0, "60m": 0, "90m": 0, "120m": 0}  # {altitude_val: count}
+    illuminations_dict = {"bright_light": 0, "weak_light": 0}  # {illumination_val: count}
+    # keep_outs_dict = {}  # {keep_out_val: count}
+    # cam_movements_dict = {}  # {cam_movement_val: count}
+    scenes_dict = {"street": 0, "stadium": 0}  # {scene_val: count}
+
+    total_frames = count_frames_per_sequence(xml_dict)
+    altitudes_dict[xml_dict['altitude']] = total_frames
+    illuminations_dict[xml_dict['illumination']] = total_frames
+    scenes_dict[xml_dict['scene']] = total_frames
+
+    for track in xml_dict['tracks_list']:
+        for box in track['non_outside_box_list']:  # for each frame
+            if box['outside'] not in outsides_dict:
+                outsides_dict[box['outside']] = 1
+            else:
+                outsides_dict[box['outside']] += 1
+
+            if box['occluded'] not in occlusions_dict:
+                occlusions_dict[box['occluded']] = 1
+            else:
+                occlusions_dict[box['occluded']] += 1
 
     return outsides_dict, occlusions_dict, altitudes_dict, illuminations_dict, scenes_dict
 

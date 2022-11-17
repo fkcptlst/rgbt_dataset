@@ -18,6 +18,7 @@ def parse_single_annotation_file(xml_path):
             track_dict[key] = value
         # print(box.attrib)
         track_dict['box_list'] = []
+        track_dict['non_outside_box_list'] = []
         for box in track:  # get all boxes
             box_dict = {}
             for key, value in box.attrib.items():
@@ -47,6 +48,8 @@ def parse_single_annotation_file(xml_path):
             #     box_dict['attributes_dict']['scene'] = attributes_list[4]['value']
 
             track_dict['box_list'].append(box_dict)  # add box_dict to track_dict
+            if box_dict['outside'] == '0':
+                track_dict['non_outside_box_list'].append(box_dict)
         xml_dict['tracks_list'].append(track_dict)
 
     return xml_dict
