@@ -2,6 +2,50 @@ import json
 import os.path
 import xml.etree.ElementTree as ET
 
+def convert_xml_leaf_to_dict(xml_leaf):
+    """
+    convert xml leaf to dict recursively
+    :param xml_leaf:
+    :return:
+    """
+    xml_dict_ = {}
+    for key, value in xml_leaf.attrib.items():
+        xml_dict_[key] = value
+    for child in xml_leaf:
+        xml_dict_[child.tag] = convert_xml_leaf_to_dict(child)
+    return xml_dict_
+
+# def parse_single_annotation_file(xml_path):
+#     tree = ET.parse(xml_path)
+#     # convert xml to dict
+#     root = tree.getroot()
+#     xml_dict = {}
+#     # for key, value in root.attrib.items():
+#     #     xml_dict[key] = value
+#
+#     meta_data_leaf = root.find('meta')
+#     meta_data_dict = convert_xml_leaf_to_dict(meta_data_leaf)
+#
+#     xml_dict['altitude'] = meta_data_dict['altitude']  # TODO: altitude, scene, illumination, uav_angle
+#
+#
+#     xml_dict['tracks_list'] = []
+#     for track in root:  # get all tracks
+#         # copy track.attrib to track_dict to avoid changing track.attrib, result is like {'id': '0', 'label': 'person'}
+#         track_dict = {}
+#         for key, value in track.attrib.items():
+#             track_dict[key] = value
+#         # print(box.attrib)
+#         track_dict['box_list'] = []
+#         for box in track:  # get all boxes
+#             box_dict = {}
+#             for key, value in box.attrib.items():
+#                 box_dict[key] = value
+#             track_dict['box_list'].append(box_dict)  # add box_dict to track_dict
+#         xml_dict['tracks_list'].append(track_dict)
+#
+#     return xml_dict
+
 
 def parse_single_annotation_file(xml_path):
     tree = ET.parse(xml_path)
@@ -51,9 +95,9 @@ def parse_single_annotation_file(xml_path):
 
     return xml_dict
 
-
 if __name__ == '__main__':
-    xml_path = os.path.join('DATASET_ROOT', 'annotations', '0.xml')
+    # xml_path = os.path.join('DATASET_ROOT', 'annotations', '0.xml')
+    xml_path = os.path.join('C:\\Users\\kevin\\Desktop\\DJI_0002', 'DJI_0002.xml')
     xml_dict = parse_single_annotation_file(xml_path)
     # export to json
     json_path = "./XMLAnnotParser.py.test.json"

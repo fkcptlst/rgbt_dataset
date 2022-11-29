@@ -249,3 +249,7 @@ TCSVT
 
 ## Temporal Misalignment
 It seems that IR is 1 second ahead or behind RGB
+
+# Steps:
+1. run dataset_analysis.ipynb to get the statistics of the dataset and split the dataset into train, val, test
+2. run rgbt2motcoco.py to convert the dataset into MOTCOCO format, and organize pictures into folders

@@ -8,3 +8,9 @@ DATASET_ROOT
 DATASET_ROOT-O
 rgb_sample
 thermal_sample
+COCO2
+IR_samples
+*.zip
+__pycache__
+.ipynb_checkpoints
+overlapped_samples

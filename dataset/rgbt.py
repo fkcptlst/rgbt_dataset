@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+import random
 from PIL import Image
 from torchvision.datasets import VisionDataset
 from torchvision.transforms import transforms
@@ -9,10 +10,13 @@ from typing import Any, Callable, Dict, Optional, Tuple, List
 import os
 import numpy as np
 import cv2
+
 if __name__ == '__main__':
     from AnnotParser import parse_single_annotation_file
 else:
     from .AnnotParser import parse_single_annotation_file
+
+
 # TODO bug here, path error, if run this file single, it will should be AnnotParser.parse_single_annotation_file
 # however, if Dataset is used in other file, it should be .AnnotParser.parse_single_annotation_file, with dot
 
@@ -169,7 +173,8 @@ class RGBT(VisionDataset):
                       'scene': self.cached_annot_dict['scene'],
                       'illumination': self.cached_annot_dict['illumination'],
                       'frame_id': thermal_frame_idx,
-                      'frame_pos': frame_pos,  # position of the frame in the sequence, 0 for first frame, 1 for last frame
+                      'frame_pos': frame_pos,
+                      # position of the frame in the sequence, 0 for first frame, 1 for last frame
                       'track_list': []  # list of track dict
                       }
         for track in self.cached_annot_dict['tracks_list']:
@@ -283,25 +288,31 @@ if __name__ == '__main__':
     #         break
 
     dataset = RGBT(root='D:\\Project_repository\\RGBT_multi_dataset\\DATASET_ROOT', online=False,
-                   supplementary_rgb_num=4, image_set='all')
+                   supplementary_rgb_num=0, image_set='all')
     print(f'len: {len(dataset)}')
     annot, thermal, rgb_dict = dataset[0]
     print(f"annot: {annot}, thermal shape: ({thermal.shape})")
-    step = 5
+    step = 20
     i = 0
+
+    sampled = np.zeros((len(dataset),))
     while i < len(dataset):
+        # generate a random index
+        # j = random.randint(0, 200)
+        # annot_dict, thermal_img, rgb_dict = dataset[min(i + j, len(dataset) - 1)]
         annot_dict, thermal_img, rgb_dict = dataset[i]
-        rgb_img = rgb_dict['0']
+        # rgb_img = rgb_dict['0']
         # convert to cv2 RGB image
         # rgb_img = cv2.cvtColor(np.asarray(rgb_img), cv2.COLOR_RGB2BGR)
         # thermal_img = cv2.cvtColor(np.asarray(thermal_img), cv2.COLOR_RGB2BGR)
         # convert tensor to cv2 RGB image
-        rgb_img = cv2.cvtColor(np.asarray(rgb_img.permute(1, 2, 0)), cv2.COLOR_RGB2BGR)
+        # rgb_img = cv2.cvtColor(np.asarray(rgb_img.permute(1, 2, 0)), cv2.COLOR_RGB2BGR)
         thermal_img = cv2.cvtColor(np.asarray(thermal_img.permute(1, 2, 0)), cv2.COLOR_RGB2BGR)
         # assert rgb_img.shape == thermal_img.shape
         # print(f'annot_dict: {annot_dict}')
 
-        overlapped = cv2.addWeighted(rgb_img, 0.8, thermal_img, 0.4, 0)
+        # overlapped = cv2.addWeighted(rgb_img, 0.8, thermal_img, 0.4, 0)
+        overlapped = thermal_img
         seq_id, altitude, scene, illumination, frame_pos = \
             annot_dict['sequence_id'], annot_dict['altitude'], annot_dict['scene'], \
             annot_dict['illumination'], annot_dict['frame_pos']
@@ -310,6 +321,13 @@ if __name__ == '__main__':
         cv2.putText(overlapped, f'illumination:{illumination}', (0, 45), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
         cv2.putText(overlapped, f'frame_pos:{frame_pos}', (0, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
         cv2.putText(overlapped, f'seq_id:{seq_id}', (0, 75), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+
+        # if sampled[seq_id] < 2:
+        #     sampled[seq_id] += 1
+        # else:
+        #     print(f'skip seq_id: {seq_id}, i={i}')
+        #     i += step
+
         for track in annot_dict['track_list']:
             box = track['box']
             if box['outside'] == '0':  # skip outside box
@@ -322,7 +340,16 @@ if __name__ == '__main__':
                 cv2.rectangle(overlapped, (xtl, ytl), (xbr, ybr), (0, 255, 255), 1)
         # display
         cv2.imshow("overlapping", overlapped)
-        key = cv2.waitKey(0) & 0xFF
+        # save image
+        # if not os.path.exists(f'D:\\Project_repository\\RGBT_multi_dataset\\samples'):
+        #     # create dir
+        #     os.makedirs(f'D:\\Project_repository\\RGBT_multi_dataset\\samples')
+        overlapped = overlapped * 255
+        # cv2.imwrite(f'D:\\Project_repository\\RGBT_multi_dataset\\samples\\{seq_id}-{int(sampled[seq_id])}.jpg', overlapped)
+        # if all sampled, break
+        # if np.sum(sampled) == 2 * len(dataset):
+        #     break
+        key = cv2.waitKey(1) & 0xFF
         if key == ord('f'):
             step += 5
             print(f'step: {step}')

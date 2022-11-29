@@ -158,21 +158,23 @@ def convert2coco(original_dataset_root, dest_root):
 
         # update annotations (instances)
         for track in annot_dict['track_list']:
+            box_dict = track['box']
+            if int(box_dict['outside']) == 1:
+                continue
+
             category_id = categories.index(track['label']) + 1
             instance_id = int(track['id'])
 
-            box_dict = track['box']
             xtl, ytl, xbr, ybr = float(box_dict['xtl']), float(box_dict['ytl']), float(box_dict['xbr']), float(
                 box_dict['ybr'])
             bbox = [xtl, ytl, xbr - xtl, ybr - ytl]
 
             area = (xbr - xtl) * (ybr - ytl)
             occluded = int(box_dict['occluded'])
-
-            if box_dict['outside'] == 1:
+            # if box_dict['outside'] == 1:
+            #     visibility = 0.0
+            if int(box_dict['occluded']) == 1:
                 visibility = 0.0
-            elif box_dict['occluded'] == 1:
-                visibility = 0.1
             else:
                 visibility = 1.0
 
@@ -231,3 +233,7 @@ def convert2coco(original_dataset_root, dest_root):
 
 if __name__ == '__main__':
     convert2coco('DATASET_ROOT', 'COCO_THERMAL')
+
+import random
+#generate a random int
+random.randint(0, 100)
